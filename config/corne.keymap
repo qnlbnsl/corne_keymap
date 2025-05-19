@@ -2,6 +2,15 @@
  * Copyright (c) 2020 The ZMK Contributors
  *
  * SPDX-License-Identifier: MIT
+ *
+ * Layer/profile mapping:
+ * - BT Profile 0: Mac (OSX) layer (GACS home row mods)
+ * - BT Profile 1: Windows layer (CAGS home row mods)
+ * - BT Profile 2: Linux layer (CAGS home row mods)
+ *
+ * Use ZMK's Bluetooth profile switching to select the correct OS layer.
+ *
+ * Home row mod behaviors and modifier order are defined using macros for maintainability.
  */
 
 #include <behaviors.dtsi>
@@ -12,36 +21,85 @@
 #define TAPPING_TERM_MS 280
 #define QUICK_TAP_MS 175
 
+// Shared home row mod behaviors for left and right hands
+#define HOME_ROW_MOD_LEFT(name) \
+	name: name { \
+		compatible = "zmk,behavior-hold-tap"; \
+		#binding-cells = <2>; \
+		flavor = "balanced"; \
+		require-prior-idle-ms = <PRIOR_IDLE_MS>; \
+		tapping-term-ms = <TAPPING_TERM_MS>; \
+		quick-tap-ms = <QUICK_TAP_MS>; \
+		bindings = <&kp>, <&kp>; \
+		hold-trigger-key-positions = <6 7 8 9 10 11 18 19 20 21 22 23 30 31 32 33 34 35 39 40 41>; \
+		hold-trigger-on-release; \
+	}
+
+#define HOME_ROW_MOD_RIGHT(name) \
+	name: name { \
+		compatible = "zmk,behavior-hold-tap"; \
+		#binding-cells = <2>; \
+		flavor = "balanced"; \
+		require-prior-idle-ms = <PRIOR_IDLE_MS>; \
+		tapping-term-ms = <TAPPING_TERM_MS>; \
+		quick-tap-ms = <QUICK_TAP_MS>; \
+		bindings = <&kp>, <&kp>; \
+		hold-trigger-key-positions = <0 1 2 3 4 5 12 13 14 15 16 17 24 25 26 27 28 29 36 37 38>; \
+		hold-trigger-on-release; \
+	}
+
 / {
 	behaviors {
-		// Home row mods with positional hold-tap
-		hml: home_row_mod_left {
-			compatible = "zmk,behavior-hold-tap";
-			#binding-cells = <2>;
-			flavor = "balanced";
-			require-prior-idle-ms = <PRIOR_IDLE_MS>;
-			tapping-term-ms = <TAPPING_TERM_MS>;
-			quick-tap-ms = <QUICK_TAP_MS>;
-			bindings = <&kp>, <&kp>;
-			hold-trigger-key-positions = <6 7 8 9 10 11 18 19 20 21 22 23 30 31 32 33 34 35 39 40 41>; // right-hand keys
-			hold-trigger-on-release;
-		};
-
-		hmr: home_row_mod_right {
-			compatible = "zmk,behavior-hold-tap";
-			#binding-cells = <2>;
-			flavor = "balanced";
-			require-prior-idle-ms = <PRIOR_IDLE_MS>;
-			tapping-term-ms = <TAPPING_TERM_MS>;
-			quick-tap-ms = <QUICK_TAP_MS>;
-			bindings = <&kp>, <&kp>;
-			hold-trigger-key-positions = <0 1 2 3 4 5 12 13 14 15 16 17 24 25 26 27 28 29 36 37 38>; // left-hand keys
-			hold-trigger-on-release;
-		};
+		// Instantiate shared home row mod behaviors
+		HOME_ROW_MOD_LEFT(hml);
+		HOME_ROW_MOD_RIGHT(hmr);
 	};
+
+	// OS-specific home row mod macros
+	#define HML_MAC &hml LGUI A &hml LALT S &hml LCTRL D &hml LSHFT F
+	#define HMR_MAC &hmr RSHFT J &hmr RCTRL K &hmr RALT L &hmr RGUI SEMI
+
+	#define HML_WIN &hml LCTRL A &hml LALT S &hml LGUI D &hml LSHFT F
+	#define HMR_WIN &hmr RSHFT J &hmr RGUI K &hmr RALT L &hmr RCTRL SEMI
+
+	#define HML_LIN &hml LCTRL A &hml LALT S &hml LGUI D &hml LSHFT F
+	#define HMR_LIN &hmr RSHFT J &hmr RGUI K &hmr RALT L &hmr RCTRL SEMI
 
 	keymap {
 		compatible = "zmk,keymap";
+
+		// Mac (OSX) Layer - BT Profile 0
+		mac_layer {
+			display-name = "Mac (OSX)";
+			bindings = <
+				&kp TAB   &kp Q         &kp W         &kp E         &kp R         &kp T   &kp Y   &kp U          &kp I          &kp O          &kp P         &kp ESC
+				&kp LSHFT HML_MAC &kp G   &kp H   HMR_MAC &kp DEL
+				&kp LCTRL &kp Z         &kp X         &kp C         &kp V         &kp B   &kp N   &kp M          &kp COMMA      &kp DOT        &kp FSLH      &kp RALT
+				&kp BSPC &mo 1 &kp RET   &kp SPACE &mo 2 &mo 3
+			>;
+		};
+
+		// Windows Layer - BT Profile 1
+		win_layer {
+			display-name = "Windows";
+			bindings = <
+				&kp TAB   &kp Q         &kp W         &kp E         &kp R         &kp T   &kp Y   &kp U          &kp I          &kp O          &kp P         &kp ESC
+				&kp LSHFT HML_WIN &kp G   &kp H   HMR_WIN &kp DEL
+				&kp LCTRL &kp Z         &kp X         &kp C         &kp V         &kp B   &kp N   &kp M          &kp COMMA      &kp DOT        &kp FSLH      &kp RALT
+				&kp BSPC &mo 1 &kp RET   &kp SPACE &mo 2 &mo 3
+			>;
+		};
+
+		// Linux Layer - BT Profile 2
+		linux_layer {
+			display-name = "Linux";
+			bindings = <
+				&kp TAB   &kp Q         &kp W         &kp E         &kp R         &kp T   &kp Y   &kp U          &kp I          &kp O          &kp P         &kp ESC
+				&kp LSHFT HML_LIN &kp G   &kp H   HMR_LIN &kp DEL
+				&kp LCTRL &kp Z         &kp X         &kp C         &kp V         &kp B   &kp N   &kp M          &kp COMMA      &kp DOT        &kp FSLH      &kp RALT
+				&kp BSPC &mo 1 &kp RET   &kp SPACE &mo 2 &mo 3
+			>;
+		};
 
 		default_layer {
 			// -----------------------------------------------------------------------------------------
